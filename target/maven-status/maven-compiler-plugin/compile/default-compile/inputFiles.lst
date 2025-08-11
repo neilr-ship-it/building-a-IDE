@@ -1,4 +1,6 @@
-/Users/neilraigandhi/jcodepad/src/main/java/com/example/PrimaryController.java
+/Users/neilraigandhi/jcodepad/src/main/java/com/example/model/EditorSession.java
+/Users/neilraigandhi/jcodepad/src/main/java/com/example/io/FileService.java
 /Users/neilraigandhi/jcodepad/src/main/java/module-info.java
-/Users/neilraigandhi/jcodepad/src/main/java/com/example/SecondaryController.java
+/Users/neilraigandhi/jcodepad/src/main/java/com/example/model/Document.java
 /Users/neilraigandhi/jcodepad/src/main/java/com/example/App.java
+/Users/neilraigandhi/jcodepad/src/main/java/com/example/model/DocumentListener.java

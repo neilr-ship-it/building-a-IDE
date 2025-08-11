@@ -23,9 +23,6 @@ public class Document {
     }
 
     public void setContent(String newContent) {
-        if(content.equals(newContent)) {
-            return;
-        }
         content = newContent;
         if(!this.isDirty) {
             isDirty = true;

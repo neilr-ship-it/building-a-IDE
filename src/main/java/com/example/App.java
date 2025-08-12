@@ -5,6 +5,7 @@ import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -15,6 +16,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
@@ -60,6 +62,14 @@ public class App extends Application {
     private HashMap<Tab, EditorSession> tabDocumentMap;
     private File selectedDir;
     private TextArea consoleArea;
+    //fields needed for search and replace ui components
+    private HBox searchBar;
+    private TextField searchField; //user input box for search term
+    private TextField replaceField;//user input box for replacement text
+    private Button nextButton;
+    private Button prevButton;
+    private Button closeSearchButton;
+    private Button replaceButton;
 
     @Override
     public void start(Stage stage) {
@@ -71,7 +81,7 @@ public class App extends Application {
 
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select project folder");
-        File selectedDir = directoryChooser.showDialog(stage);
+        this.selectedDir = directoryChooser.showDialog(stage);
         if(selectedDir == null) {
             System.out.println("no folder chose so exiting");
             Platform.exit();
@@ -126,6 +136,21 @@ public class App extends Application {
     treeView.setShowRoot(true);
     root.setLeft(treeView);
     treeView.setPrefWidth(250);
+    //hooking up search bar ui 
+    searchBar = createSearchBar();
+    VBox topContainer = new VBox(menuBar, searchBar); 
+    root.setTop(topContainer);
+
+    //code to attatch key binding control f to open search bar and if its open and 
+    //user clicks escape then we close it, done using lambdas 
+    root.setOnKeyPressed(event -> {
+        if(new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(event)) {
+            searchBar.setVisible(true);
+            searchField.requestFocus();
+        } else if(event.getCode() == KeyCode.ESCAPE && searchBar.isVisible()) {
+            searchBar.setVisible(false);
+        }
+    });
 
     //initializing the console area text area for where the compiled output will show up
     consoleArea = new TextArea();
@@ -495,7 +520,7 @@ private void renameFile(File file, TreeItem<File> treeItem) {
         if(success) {
             treeItem.setValue(newFile);
         } else {
-            showError("Delete Failed", "Couldnt delete " + file.getName());
+            showError("Rename Failed", "Couldnt Rename " + file.getName());
         }
     });
 }
@@ -714,6 +739,29 @@ private class CompileAndRunTask implements Runnable {
             Platform.runLater(() -> consoleArea.appendText("Exception: " + e.getMessage()));
         }
     }
+}
+
+private HBox createSearchBar() {
+    searchField = new TextField();
+    searchField.setText("Find");
+    replaceField = new TextField();
+    replaceField.setText("Replace with");
+
+    nextButton = new Button("Next");
+    prevButton = new Button("Prev");
+    replaceButton = new Button("Replace");
+    closeSearchButton = new Button("X");
+
+    nextButton.setOnAction(e -> findNext());
+    prevButton.setOnAction(e -> findPrevious());
+    replaceButton.setOnAction(e -> replaceCurent());
+    closeSearchButton.setOnAction(e -> searchBar.setVisible(false));
+
+    HBox bar = new HBox(5, searchField, replaceField, nextButton, prevButton, replaceButton, closeSearchButton);
+    bar.setStyle("-fx-padding: 5; -fx-background-color: #ddd;");
+    bar.setVisible(false);
+    return bar;
+
 }
 
     public static void main(String[] args) {

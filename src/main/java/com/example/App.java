@@ -754,7 +754,7 @@ private HBox createSearchBar() {
 
     nextButton.setOnAction(e -> findNext());
     prevButton.setOnAction(e -> findPrevious());
-    replaceButton.setOnAction(e -> replaceCurent());
+    replaceButton.setOnAction(e -> replaceCurrent());
     closeSearchButton.setOnAction(e -> searchBar.setVisible(false));
 
     HBox bar = new HBox(5, searchField, replaceField, nextButton, prevButton, replaceButton, closeSearchButton);
@@ -762,6 +762,85 @@ private HBox createSearchBar() {
     bar.setVisible(false);
     return bar;
 
+}
+
+//helper methods for the search bar
+//first need a method just to know what editor we are in
+//because we have to use its text area 
+private int lastSearchIndex = -1;
+
+private TextArea getCurrEditor() {
+    Tab currTab = tabPane.getSelectionModel().getSelectedItem();
+    if(currTab == null) {
+        return null;
+    }
+    EditorSession currEditorSession = tabDocumentMap.get(currTab);
+    if (currEditorSession != null) {
+        return currEditorSession.getEditor();
+    } else {
+        return null;
+    }
+}
+
+private void findNext() {
+    TextArea editor = getCurrEditor();
+    if(editor == null) {
+        return;
+    }
+    String query = searchField.getText();
+    String text = editor.getText();
+    if(query.isEmpty()) {
+        return;
+    }
+    //if the index -1 meants it wasnt found from current start onwards so we then wrap
+    //around to see if it exists from the start and if it does also highlight that 
+
+    int startPos = editor.getCaretPosition();
+    int index = text.indexOf(query, startPos);
+    if(index == -1 && startPos > 0) {
+        index = text.indexOf(query);
+    }
+    if(index >= 0) {
+        editor.selectRange(index, index + query.length());
+        lastSearchIndex = index;
+    }
+}
+//start = query length - 1 to skip the current match and look earlier in the text
+//if going back by 1 query takes us out of bounds of the current text then we want to
+//wrap around and start at the end, last index of gives last occurnece before or at 
+//that position if found index will be start position of that match if not found then -1
+
+private void findPrevious() {
+    TextArea editor = getCurrEditor();
+    if(editor == null) {
+        return;
+    }
+    String text = editor.getText();
+    String query = searchField.getText();
+    if(query.isEmpty()) {
+        return;
+    }
+    int startPos = editor.getCaretPosition() - query.length() - 1;
+
+    if(startPos < 0) {
+        startPos = text.length() - 1;
+    }
+    int index = text.lastIndexOf(query, startPos);
+    if(index >= 0) {
+        editor.selectRange(index, index + query.length());
+        lastSearchIndex = index;
+    }
+}
+
+private void replaceCurrent() {
+    TextArea editor = getCurrEditor();
+    if(editor == null) {
+        return;
+    }
+    if(editor.getSelectedText().equals(searchField.getText())) {
+        editor.replaceSelection(replaceField.getText());
+    }
+    findNext();
 }
 
     public static void main(String[] args) {

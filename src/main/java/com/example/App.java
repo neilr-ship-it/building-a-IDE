@@ -29,6 +29,11 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.image.ImageView;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,6 +41,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.nio.file.*;
+import java.util.List;
 
 
 import javafx.scene.input.KeyCodeCombination;
@@ -72,6 +79,10 @@ public class App extends Application {
     private Button prevButton;
     private Button closeSearchButton;
     private Button replaceButton;
+    // DnD data formats (internal drag within the tree)
+    private static final DataFormat DF_INTERNAL_FILE = new DataFormat("application/x-jcodepad-internal-file");
+    private static final DataFormat DF_INTERNAL_TREEITEM = new DataFormat("application/x-jcodepad-internal-treeitem");
+
 
     @Override
     public void start(Stage stage) {
@@ -856,6 +867,108 @@ private void replaceCurrent() {
     }
     findNext();
 }
+
+/* 
+//drop targetDir determines the directory that will recieve the file drop
+private File dropTargetDir(File target) {
+    if(target != null && target.isDirectory()) {
+        return target;
+    } else if(target != null) {
+        return target.getParentFile();
+    } else {
+        return null;
+    }
+}
+
+//helper method to prevent moving a folder into one of its descendants, essentially 
+//checking whether one path the child is inside another path the ancestor in the file
+//system
+//logic sequence when coming up with descendant relationship between file paths, 
+//validate the inputs, normalize both paths and compare using path componenet logic
+//avoid using string compairson 
+private boolean isDescendant(Path potentialChild, Path potentialAncestor) {
+    //if either one of the paths is null cant be valid file system path so
+    //immediately return false
+    if(potentialAncestor == null || potentialChild == null) {
+        return false;
+    }
+    //.normalize() cleans up the path 
+    Path ancestor = potentialAncestor.normalize().toAbsolutePath();
+    Path child = potentialChild.normalize().toAbsolutePath();
+    return child.startsWith(ancestor) //returns true if child is inside ancestor 
+    //as it should be and would return false the other way around 
+}
+
+//helper method to avoid overwriting, like for example if i had a file foo.txt and 
+//dragged another file called foo.txt we would avoid overriting by renaming the incoming 
+//one too foo(1) and keep incrememtning number until we find opening 
+private Path resolveCollision(Path targetDir, String name) {
+    //get the path and see if file exists at that path
+    Path dest = targetDir.resolve(name); //gets the path represents targetDir/name
+    if(!Files.exists(dest)) {
+        return dest;
+    }
+    //now that we know the file exists we create the renaming logic
+    //want to rename foo.txt to foo(1).txt
+    //want to insert the number before the dot
+    String base = name;
+    String extension = "";
+    int dotIndex = name.lastIndexOf('.');
+    if(dotIndex > 0) {
+        //base should be the part before the dot 
+        base = name.substring(0, dotIndex);
+        extension = name.substring(dotIndex);
+    }
+
+    int i = 1;
+    while (Files.exists(dest)) {
+        dest = targetDir.resolve(base + " (" + i + ")" + extension);
+        i++;
+    }
+    return dest;
+}
+
+//purpose of the method is to copy a file or entire folder including all its subfolders
+//and file from src(source path) to dest (the destination path preserving file attributes)
+private void copyRecursively(Path src, Path dest) throws IOException {
+    //determine whether the src path is a folder or file, only have to copy contents if
+    //its a folder, Files.walk produces a stream of all files and directories inside src
+    //at every depth level, includes the folder itself then all its subfolders then files
+    //the for each lambda processes each found path while walking one by one
+    //p is the current Path from the strwam produced by files.walk(src) 
+    if(Files.isDirectory(src)) {
+        Files.walk(src).forEach(p -> {
+            try {
+                Path rel = src.relativize(p); //gives p path in terms of src
+                Path finalPlace = dest.resolve(rel);
+                if(Files.isDirectory(p)) {
+                    Files.createDirectories(finalPlace);
+                } else {
+                    //if its a file makes sure its parent folder exist then copy file in
+                    Files.createDirectories(finalPlace.getParent());
+                    Files.copy(p, finalPlace, StandardCopyOption.COPY_ATTRIBUTES);
+                }
+            } catch(IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    } else {
+        Files.createDirectories(dest.getParent());
+        Files.copy(src, dest, StandardCopyOption.COPY_ATTRIBUTES);
+    }
+}
+
+//method moves a file or folder into into a target directory while making sure it wont 
+//overwrite something that is alread there, uses earlier resolve Collision method 
+//to rename if needed 
+private void moveSafely(Path src, Path targetDir) throws IOException {
+    //decide on a safe destination using resolve collsision 
+    Path safeDest = resolveCollision(targetDir, src.getFileName().toString());
+    //ensure the directory that will hold the item to be moved exists 
+    Files.createDirectories(safeDest.getParent());
+    Files.move(src, safeDest);
+}
+*/
 
     public static void main(String[] args) {
         launch();

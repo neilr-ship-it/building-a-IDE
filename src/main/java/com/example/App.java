@@ -22,6 +22,7 @@ import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -170,9 +171,21 @@ public class App extends Application {
             super.updateItem(file, empty);
             if(empty || file == null) {
                 setText(null);
+                setGraphic(null);
                 setContextMenu(null);
             } else {
                 setText(file.getName());
+
+                //code to load icons
+                ImageView iconView;
+                if(file.isDirectory()) {
+                    iconView = new ImageView(getClass().getResource("/icons/folder-Icon.png").toExternalForm());
+                } else {
+                    iconView = new ImageView(getClass().getResource("/icons/file-icon.png").toExternalForm());
+                }
+                iconView.setFitHeight(16);
+                iconView.setFitWidth(16);
+                setGraphic(iconView);
 
                 MenuItem renameItem = new MenuItem("Rename");
                 MenuItem deleteItem = new MenuItem("Delete");
